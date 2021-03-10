@@ -56,10 +56,10 @@ app.post('/account', (request, response) => {
   return response.status(201).json({ message: 'Customer created', customer });
 });
 
-app.get('/statement', verifyIfExistsAccountCPF, getBalance, (request, response) => {
-  const { statement, balance } = request.customer;
+app.get('/statement', verifyIfExistsAccountCPF, (request, response) => {
+  const { statement } = request.customer;
 
-  return response.status(200).json({ message: 'Statement found', balance, statement });
+  return response.status(200).json({ message: 'Statement found', statement });
 });
 
 app.post('/deposit', verifyIfExistsAccountCPF, verifyIfAmountIsPositive, (request, response) => {
@@ -85,6 +85,46 @@ app.post('/withdraw', verifyIfExistsAccountCPF, verifyIfAmountIsPositive, getBal
   customer.statement.push(statementOperation);
 
   return response.status(201).json({ message: 'Withdraw created', statementOperation });
+});
+
+app.get('/statement/date', verifyIfExistsAccountCPF, (request, response) => {
+  let { statement } = request.customer;
+  let { date } = request.query;
+
+  date = new Date(`${date} 00:00`);
+
+  statement = statement.filter(operation => operation.created_at.toDateString() === new Date(date).toDateString());
+
+  return response.status(200).json({ message: 'Statement found', statement });
+});
+
+app.put('/account', verifyIfExistsAccountCPF, (request, response) => {
+  const { name } = request.body;
+  const { customer } = request;
+
+  customer.name = name;
+
+  return response.status(200).json({ message: 'Customer updated', customer });
+});
+
+app.get('/account', verifyIfExistsAccountCPF, (request, response) => {
+  const { customer } = request;
+
+  return response.status(200).json({ message: 'Customer found', customer });
+});
+
+app.delete('/account', verifyIfExistsAccountCPF, (request, response) => {
+  const { customer } = request;
+
+  customers.splice(customer, 1);
+
+  return response.status(200).json({ message: 'Customer deleted' });
+});
+
+app.get('/balance', verifyIfExistsAccountCPF, getBalance, (request, response) => {
+  const { balance } = request.customer;
+
+  return response.status(200).json({ message: 'Balance found', balance });
 });
 
 app.listen(port, () => console.log(`-> Server running on port ${port}`));
